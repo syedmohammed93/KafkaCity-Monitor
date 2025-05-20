@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./database/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+
+  producer:
+    build: ./producer
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: kafka:9092
+
+  consumer:
+    build: ./consumer
+    depends_on:
+      - kafka
+      - mongo
+    environment:
+      KAFKA_BROKER: kafka:9092
+      MONGO_URI: mongodb://mongo:27017/
+
+  backend:
+    build: ./backend
+    depends_on:
+      - mongo
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/
