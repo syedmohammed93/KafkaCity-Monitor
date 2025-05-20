@@ -23,6 +23,5 @@ docker-compose up --build
 - REST API to access sensor data
 
 ## Future Improvements
-- Integrate Grafana for visualization
 - Simulate multiple sensor types
 - Add authentication and authorization to API
